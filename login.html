@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Login</title>
+<script src='https://cdn.tailwindcss.com'></script>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'>
+<style>body{background:#1a1a1a;color:#fff;font-family:system-ui}.gc{background:rgba(33,33,33,.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.08)}.gg{box-shadow:0 0 40px rgba(34,197,94,.15)}.bg{background:linear-gradient(135deg,#22c55e,#16a34a)}.bg:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(34,197,94,.3)}@keyframes su{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}.su{animation:su .6s ease}</style>
+</head>
+<body class='min-h-screen flex items-center justify-center'>
+<div class='gc gg rounded-2xl p-8 w-full max-w-md mx-4 su'>
+<div class='text-center mb-8'>
+<div class='inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-green-700 mb-4'><i class='fa-solid fa-check-double text-white text-2xl'></i></div>
+<h1 class='text-3xl font-bold'>Simplly DO</h1>
+<p class='text-gray-400 text-sm mt-2'>To-DO and Tracker (productive and discipline)</p>
+</div>
+<form onsubmit='doLogin(event)'>
+<input type='email' id='le' placeholder='Email' required class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 mb-4'>
+<input type='password' id='lp' placeholder='Password' required class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 mb-4'>
+<div id='err' class='hidden text-red-400 text-sm mb-4 text-center'></div>
+<button type='submit' class='bg w-full text-white font-bold py-3 rounded uppercase'>Login</button>
+</form>
+<p class='text-center text-gray-500 text-sm mt-4'>Don't have an account?<a href='#' onclick='goSignup()' class='text-green-400 ml-1'>Signup</a></p>
+<div id='signupF' class='hidden mt-6 pt-6 border-t border-gray-700'>
+<input type='text' id='sn' placeholder='Name' class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 mb-3'>
+<input type='email' id='se' placeholder='Email' required class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 mb-3'>
+<input type='password' id='sp' placeholder='Password (min 4)' required class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 mb-3'>
+<button onclick='doSignup()' class='bg w-full text-white font-bold py-3 rounded uppercase'>Signup</button>
+</div>
+</div>
+<script>
+var U=JSON.parse(localStorage.getItem('wu')||'[]');
+function goSignup(){document.getElementById('signupF').classList.toggle('hidden')}
+function doLogin(e){
+e.preventDefault();
+e.stopPropagation();
+var em=document.getElementById('le').value.trim();
+var pw=document.getElementById('lp').value;
+if(!em||!pw){document.getElementById('err').textContent='Enter both Email and Password!';document.getElementById('err').classList.remove('hidden');return}
+var u=U.find(function(x){return x.email===em&&x.pw===pw});
+if(!u){document.getElementById('err').textContent='Invalid credentials!';document.getElementById('err').classList.remove('hidden');return}
+document.getElementById('err').classList.add('hidden');
+localStorage.setItem('wcu',JSON.stringify({name:u.name,email:u.email}));
+window.location.href='index.html';
+}
+function doSignup(){
+var nm=document.getElementById('sn').value,em=document.getElementById('se').value,pw=document.getElementById('sp').value;
+if(!nm||!em||pw.length<4){alert('Fill all fields!');return}
+if(U.find(function(x){return x.email===em})){alert('Email already exists!');return}
+U.push({name:nm,email:em,pw:pw});
+localStorage.setItem('wu',JSON.stringify(U));
+alert('Account created! Now login.');
+goSignup();
+document.getElementById('le').value=em;
+}
+if(localStorage.getItem('wcu'))window.location.href='index.html';
+</script>
+</body></html>

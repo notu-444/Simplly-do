@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simplly DO - ToDo App</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body{background:#1a1a1a;color:#fff;font-family:'Segoe UI',Tahoma,sans-serif}
+.sidebar{background:#212121}
+.task-bg{background:#2b2b2b}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:#4a4a4a;border-radius:10px}
+.nav-item{transition:all .2s}
+.nav-item:hover{background:#2d2d2d}
+.nav-item.active{background:#383838;border-left:4px solid #3b82f6}
+.task-item{transition:all .2s}
+.task-item:hover{background:#333}
+.task-item.done p{text-decoration:line-through;opacity:.5}
+.task-item.done .cb{background:#22c55e;border-color:#22c55e}
+.task-item.done .cb i{display:block}
+.cb i{display:none}
+.cb:hover{border-color:#3b82f6}
+.star.on{color:#3b82f6}
+.star:not(.on){color:#6b7280}
+.modal-bg{background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fi{animation:fi .3s ease}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.pulse{animation:pulse 2s infinite}
+.chore-done{border-left:3px solid #ef4444;background:#2d2d2d}
+
+/* Chore Tracker Styles */
+.chore-table th{background:#1e1e1e;color:#9ca3af;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:12px 16px;text-align:left;border-bottom:1px solid #374151}
+.chore-table td{padding:10px 16px;border-bottom:1px solid #2d2d2d}
+.chore-table tr:hover{background:#2d2d2d}
+.chore-table select,.chore-table input[type="text"]{background:#1e1e1e;border:1px solid #374151;color:#fff;font-size:13px;border-radius:6px;padding:6px 10px;width:100%}
+.chore-table select:focus,.chore-table input:focus{outline:none;border-color:#3b82f6}
+.heatmap-cell{width:14px;height:14px;border-radius:3px;transition:all 0.15s ease}
+.heatmap-grid{display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;gap:3px}
+.heatmap-cell:hover{outline:2px solid #9ca3af;outline-offset:1px}
+.edit-btn{padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;border:2px solid #374151;transition:all 0.2s ease;cursor:pointer;letter-spacing:0.05em}
+.edit-btn:hover{border-color:#3b82f6;color:#3b82f6}
+.edit-btn.active{background:#3b82f6;border-color:#3b82f6;color:#fff}
+.add-row-btn{width:100%;padding:16px;border:2px dashed #374151;border-radius:8px;color:#6b7280;transition:all 0.2s ease;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:500}
+.add-row-btn:hover{border-color:#3b82f6;color:#3b82f6;background:rgba(59,130,246,0.05)}
+.status-completed{background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3)}
+.status-pending{background:rgba(234,179,8,0.15);color:#eab308;border:1px solid rgba(234,179,8,0.3)}
+.status-skip{background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3)}
+.status-blank{background:rgba(107,114,128,0.1);color:#6b7280;border:1px solid rgba(107,114,128,0.2)}
+</style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+<!-- SIDEBAR -->
+<div class="sidebar w-72 flex flex-col h-full border-r border-gray-800 z-10">
+<div class="px-5 pt-4 pb-2 flex flex-col">
+<div class="flex items-center">
+<i class="fa-solid fa-check-double mr-2 text-white"></i>
+<span class="font-bold text-xl tracking-wide"><span class="text-white">Simplly</span> <span class="text-green-500">DO</span></span>
+</div>
+<p class="text-gray-500 text-[11px] tracking-widest lowercase mt-0.5 ml-7">productive and discipline</p>
+</div>
+<div class="px-4 py-3 flex items-center hover:bg-[#2d2d2d] cursor-pointer rounded mx-1">
+<div id="uAv" class="w-10 h-10 rounded-full mr-3 border border-gray-600 bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-white font-bold text-sm">?</div>
+<div class="text-sm overflow-hidden flex-1">
+<div class="font-semibold text-gray-100 flex justify-between items-center"><span id="uNm">Guest</span><i class="fa-solid fa-chevron-down text-xs text-gray-500"></i></div>
+<div class="text-gray-400 text-xs truncate" id="uEm">Not logged in</div>
+</div>
+</div>
+<div class="px-4 py-3">
+<div class="relative">
+<i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+<input type="text" id="sIn" placeholder="Search tasks..." oninput="renderTasks()" class="w-full bg-[#1e1e1e] border border-gray-700 text-white text-sm rounded px-9 py-1.5 focus:outline-none focus:border-blue-500 transition">
+</div>
+</div>
+<div class="flex-1 overflow-y-auto mt-2 text-[15px]" id="navList">
+<a href="#" class="nav-item active flex justify-between items-center px-5 py-3 text-white font-medium" data-s="myday">
+<div class="flex items-center"><i class="fa-regular fa-sun w-7 text-gray-300 text-lg"></i> My Day</div>
+<span class="text-xs bg-gray-600 px-2 py-0.5 rounded-full" id="cMD">0</span>
+</a>
+<a href="#" class="nav-item flex justify-between items-center px-5 py-3 text-gray-300" data-s="important">
+<div class="flex items-center"><i class="fa-regular fa-star w-7 text-pink-400 text-lg"></i> Important</div>
+<span class="text-xs bg-gray-700 px-2 py-0.5 rounded-full" id="cIM">0</span>
+</a>
+<a href="#" class="nav-item flex justify-between items-center px-5 py-3 text-gray-300" data-s="planned">
+<div class="flex items-center"><i class="fa-solid fa-calendar-days w-7 text-teal-400 text-lg"></i> Planned</div>
+<span class="text-xs bg-gray-700 px-2 py-0.5 rounded-full" id="cPL">0</span>
+</a>
+<a href="#" class="nav-item flex justify-between items-center px-5 py-3 text-gray-300" data-s="all">
+<div class="flex items-center"><i class="fa-solid fa-house w-7 text-blue-400 text-lg"></i> All Tasks</div>
+<span class="text-xs bg-gray-700 px-2 py-0.5 rounded-full" id="cAL">0</span>
+</a>
+<div class="border-t border-gray-700 my-2 mx-5"></div>
+<a href="#" class="nav-item flex items-center px-5 py-3 text-gray-300 font-medium" data-s="chores">
+<i class="fa-solid fa-broom w-7 text-red-500 text-lg"></i> Chore Tracker
+</a>
+</div>
+<div class="px-4 py-4 border-t border-gray-800">
+<button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-gray-400 hover:text-red-400 text-sm py-2 rounded transition">
+<i class="fa-solid fa-right-from-bracket"></i> Logout
+</button>
+</div>
+</div>
+
+<!-- MAIN -->
+<div class="flex-1 flex flex-col relative h-full bg-[#181818]">
+<div class="px-8 pt-10 pb-4 flex justify-between items-start">
+<div>
+<div class="flex items-center gap-5">
+<h1 class="text-[28px] font-semibold text-blue-400 tracking-wide" id="sTitle">My Day</h1>
+<div class="bg-gradient-to-r from-orange-500 to-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 pulse">
+<i class="fa-solid fa-fire text-yellow-300"></i>
+<span id="streak">0</span> Day Streak!
+</div>
+</div>
+<p class="text-gray-400 text-sm mt-1" id="curDate"></p>
+</div>
+<div class="text-gray-400 space-x-4 text-lg flex items-center">
+<button class="edit-btn hidden" id="editBtn" onclick="toggleChoreEdit()" title="Edit mode"><i class="fa-solid fa-pen mr-1"></i> EDIT</button>
+<button class="hover:text-white transition" onclick="clearDone()" title="Clear completed"><i class="fa-solid fa-broom"></i></button>
+</div>
+</div>
+<div class="flex-1 px-8 overflow-y-auto" id="taskCont">
+<div id="tList"></div>
+<div id="empty" class="hidden text-center py-20">
+<i class="fa-solid fa-clipboard-list text-6xl text-gray-700 mb-4"></i>
+<p class="text-gray-500 text-lg">No tasks available!</p>
+<p class="text-gray-600 text-sm mt-2">Add tasks from below</p>
+</div>
+<div id="choreDash" class="hidden">
+<div class="flex flex-wrap items-center gap-3 mb-5">
+<div class="flex items-center gap-1.5 text-sm"><span class="text-gray-500">Total Tasks:</span><span id="cTotal" class="font-bold text-white">0</span></div>
+<span class="text-gray-700">|</span>
+<div class="flex items-center gap-1.5 text-sm"><span class="text-gray-500">Completed:</span><span id="cDone" class="font-bold text-green-400">0</span></div>
+<span class="text-gray-700">|</span>
+<div class="flex items-center gap-1.5 text-sm"><span class="text-gray-500">Pending:</span><span id="cPend" class="font-bold text-yellow-400">0</span></div>
+<span class="text-gray-700">|</span>
+<div class="flex items-center gap-1.5 text-sm"><span class="text-gray-500">Skip:</span><span id="cSkip" class="font-bold text-red-400">0</span></div>
+</div>
+<div class="bg-[#1e1e1e] rounded-lg border border-gray-700/50 overflow-hidden mb-5">
+<table class="w-full chore-table"><thead><tr><th class="w-14">PK</th><th class="w-40">Time</th><th>Task</th><th class="w-36">Status</th><th class="w-12"></th></tr></thead><tbody id="choreTableBody"></tbody></table>
+</div>
+<div id="addRowBtn" class="hidden mb-5"><button onclick="addChoreRow()" class="add-row-btn"><i class="fa-solid fa-plus text-lg"></i> Add Row</button></div>
+<div class="mt-6">
+<div class="flex items-center justify-between mb-3">
+<h3 class="text-sm font-semibold text-gray-400"><i class="fa-solid fa-fire text-orange-400 mr-2"></i>Contribution Heatmap</h3>
+<div class="flex items-center gap-3 text-xs">
+<div class="flex items-center gap-1"><div class="w-3 h-3 rounded-sm bg-[#161b22]"></div><span class="text-gray-600">No data</span></div>
+<div class="flex items-center gap-1"><div class="w-3 h-3 rounded-sm bg-yellow-400"></div><span class="text-gray-600">1-4</span></div>
+<div class="flex items-center gap-1"><div class="w-3 h-3 rounded-sm bg-green-400"></div><span class="text-gray-600">5-6</span></div>
+<div class="flex items-center gap-1"><div class="w-3 h-3 rounded-sm bg-green-600"></div><span class="text-gray-600">7+</span></div>
+</div>
+</div>
+<div id="heatmap" class="p-4 bg-[#0d1117] rounded-lg border border-gray-700/50 overflow-x-auto"></div>
+</div>
+</div>
+</div>
+<div id="normalInput" class="px-8 pb-8 pt-4">
+<div class="task-bg rounded-md shadow-md flex items-center px-4 py-3.5 focus-within:ring-1 focus-within:ring-blue-500 transition">
+<i class="fa-solid fa-plus text-blue-500 mr-4 text-lg"></i>
+<input type="text" id="tIn" placeholder="Add a task" onkeydown="if(event.key==='Enter')addTask()" class="bg-transparent w-full text-[15px] focus:outline-none text-white placeholder-blue-500 font-medium">
+</div>
+</div>
+<div id="choreInput" class="hidden px-8 pb-8 pt-4">
+<button onclick="addChoreRow()" class="add-row-btn"><i class="fa-solid fa-plus text-lg"></i> Add Row</button>
+</div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="eMod" class="hidden fixed inset-0 modal-bg flex items-center justify-center z-50" onclick="closeEdit()">
+<div class="bg-[#2b2b2b] rounded-xl p-6 w-full max-w-md shadow-2xl border border-gray-700 fi" onclick="event.stopPropagation()">
+<h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-pen mr-2 text-blue-400"></i>Edit Task</h3>
+<input type="text" id="eIn" class="w-full bg-[#1e1e1e] border border-gray-700 text-white text-sm rounded-lg px-4 py-3 mb-3 focus:outline-none focus:border-blue-500" placeholder="Task name">
+<div class="flex items-center gap-3 mb-4">
+<label class="text-gray-400 text-sm">Due Date:</label>
+<input type="date" id="eDate" class="bg-[#1e1e1e] border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none flex-1">
+</div>
+<div class="flex items-center gap-3 mb-4">
+<label class="text-gray-400 text-sm">Category:</label>
+<select id="eCat" class="bg-[#1e1e1e] border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none flex-1">
+<option value="myday">My Day</option>
+<option value="important">Important</option>
+<option value="planned">Planned</option>
+<option value="all">All Tasks</option>
+</select>
+</div>
+<div class="flex justify-end gap-3">
+<button onclick="closeEdit()" class="px-4 py-2 text-gray-400 hover:text-white text-sm">Cancel</button>
+<button onclick="saveEdit()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm">Save</button>
+</div>
+</div>
+</div>
+
+
+<script>
+var CU=JSON.parse(localStorage.getItem('wcu')||'null');
+var section='myday',editId=null;
+if(!CU)window.location.href='login.html';
+
+function logout(){localStorage.removeItem('wcu');window.location.href='login.html'}
+function esc(t){var d=document.createElement('div');d.textContent=t;return d.innerHTML}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5)}
+function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+
+if(CU){
+var i=document.getElementById('uNm');if(i)i.textContent=CU.name;
+var e2=document.getElementById('uEm');if(e2)e2.textContent=CU.email;
+var av=document.getElementById('uAv');if(av)av.textContent=CU.name.split(' ').map(function(w){return w[0]}).join('').toUpperCase().substring(0,2);
+}
+
+var now=new Date(),days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var cd=document.getElementById('curDate');if(cd)cd.textContent=days[now.getDay()]+', '+now.getDate()+' '+months[now.getMonth()];
+
+function getT(){return JSON.parse(localStorage.getItem('wt_'+CU.email)||'[]')}
+function saveT(t){localStorage.setItem('wt_'+CU.email,JSON.stringify(t))}
+function addTask(){var v=document.getElementById('tIn').value.trim();if(!v)return;var tasks=getT();tasks.unshift({id:uid(),text:v,done:false,star:section==='important',cat:section==='chores'?'all':section,due:null,ts:Date.now()});saveT(tasks);document.getElementById('tIn').value='';renderTasks();updateCounts()}
+function toggleT(id){var t=getT(),tk=t.find(function(x){return x.id===id});if(tk){tk.done=!tk.done;tk.completedAt=tk.done?Date.now():null;saveT(t);renderTasks();updateCounts();calcStreak()}}
+function toggleStar(id){var t=getT(),tk=t.find(function(x){return x.id===id});if(tk){tk.star=!tk.star;saveT(t);renderTasks();updateCounts()}}
+function delT(id){saveT(getT().filter(function(x){return x.id!==id}));renderTasks();updateCounts()}
+function openEdit(id){var t=getT(),tk=t.find(function(x){return x.id===id});if(!tk)return;editId=id;document.getElementById('eIn').value=tk.text;document.getElementById('eDate').value=tk.due||'';document.getElementById('eCat').value=tk.cat||'myday';document.getElementById('eMod').classList.remove('hidden')}
+function closeEdit(){document.getElementById('eMod').classList.add('hidden');editId=null}
+function saveEdit(){if(!editId)return;var t=getT(),tk=t.find(function(x){return x.id===editId});if(!tk)return;tk.text=document.getElementById('eIn').value.trim()||tk.text;tk.due=document.getElementById('eDate').value||null;tk.cat=document.getElementById('eCat').value;saveT(t);closeEdit();renderTasks();updateCounts()}
+function clearDone(){saveT(getT().filter(function(x){return !x.done}));renderTasks();updateCounts()}
+
+function renderTasks(){
+if(section==='chores'){showChoreView();return}hideChoreView();
+var tasks=getT(),q=(document.getElementById('sIn').value||'').toLowerCase(),f;
+if(section==='myday')f=tasks.filter(function(t){return t.cat==='myday'});
+else if(section==='important')f=tasks.filter(function(t){return t.star});
+else if(section==='planned')f=tasks.filter(function(t){return t.cat==='planned'||t.due});
+else f=tasks;
+if(q)f=f.filter(function(t){return t.text.toLowerCase().indexOf(q)>-1});
+var c=document.getElementById('tList'),em=document.getElementById('empty');
+if(!f.length){c.innerHTML='';em.classList.remove('hidden');return}
+em.classList.add('hidden');
+var h='';
+f.forEach(function(t){
+h+='<div class="group task-item '+(t.done?'done':'')+' rounded-md flex items-center px-4 py-3.5 hover:bg-[#333] transition cursor-pointer shadow-sm mb-2 fi">';
+h+='<button class="cb w-5 h-5 rounded-full border-2 border-gray-400 mr-4 flex-shrink-0 relative" onclick="toggleT(\''+t.id+'\')">';
+h+='<i class="fa-solid fa-check text-white text-[10px] absolute top-0.5 left-0.5"></i></button>';
+h+='<div class="flex-1 flex justify-between items-center"><div>';
+h+='<p class="text-[15px] font-medium text-gray-200">'+esc(t.text)+'</p>';
+h+='<p class="text-xs text-gray-400 mt-1 flex items-center gap-2"><span>'+(t.cat||'myday').charAt(0).toUpperCase()+(t.cat||'myday').slice(1)+'</span>';
+if(t.due)h+=' &bull; <span class="text-blue-400"><i class="fa-regular fa-calendar"></i> '+t.due+'</span>';
+h+='</p></div>';
+h+='<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">';
+h+='<button class="star '+(t.star?'on':'')+' text-xl" onclick="toggleStar(\''+t.id+'\')"><i class="fa-'+(t.star?'solid':'regular')+' fa-star"></i></button>';
+h+='<button class="text-gray-400 hover:text-blue-400 text-sm" onclick="openEdit(\''+t.id+'\')"><i class="fa-solid fa-pen"></i></button>';
+h+='<button class="text-gray-400 hover:text-red-400 text-sm" onclick="delT(\''+t.id+'\')"><i class="fa-solid fa-trash"></i></button>';
+h+='</div></div></div>';
+});
+c.innerHTML=h;
+}
+
+
+
+document.querySelectorAll('.nav-item').forEach(function(a){
+a.addEventListener('click',function(e){
+e.preventDefault();
+section=this.dataset.s;
+document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active','text-white','font-medium');n.classList.add('text-gray-300')});
+this.classList.add('active','text-white','font-medium');this.classList.remove('text-gray-300');
+var titles={myday:'My Day',important:'Important',planned:'Planned',all:'All Tasks',chores:'Chore Tracker'};
+var st=document.getElementById('sTitle');if(st)st.textContent=titles[section]||'My Day';
+renderTasks();
+});
+});
+
+function updateCounts(){
+var t=getT(),c=function(f){return t.filter(f).length};
+document.getElementById('cMD').textContent=c(function(x){return x.cat==='myday'&&!x.done});
+document.getElementById('cIM').textContent=c(function(x){return x.star&&!x.done});
+document.getElementById('cPL').textContent=c(function(x){return(x.cat==='planned'||x.due)&&!x.done});
+document.getElementById('cAL').textContent=c(function(x){return !x.done});
+}
+
+function calcStreak(){
+var t=getT(),needsSave=false;
+t.forEach(function(x){if(x.done&&!x.completedAt){x.completedAt=x.ts;needsSave=true}});
+if(needsSave)saveT(t);
+var dates={};
+t.forEach(function(x){if(x.done&&x.completedAt){var d=new Date(x.completedAt).toISOString().split('T')[0];dates[d]=true}});
+var s=0,d=new Date();
+while(dates[d.toISOString().split('T')[0]]){s++;d.setDate(d.getDate()-1)}
+document.getElementById('streak').textContent=s;
+}
+
+document.getElementById('eMod').addEventListener('click',function(e){if(e.target===this)closeEdit()});
+
+
+renderTasks();updateCounts();calcStreak();
+
+/* ===== CHORE TRACKER DASHBOARD ===== */
+var choreEditMode=false,CHORE_KEY='choreTracker';
+var defaultTimeSlots=['06:00 - 07:00 AM','07:00 - 08:00 AM','08:00 - 09:00 AM','09:00 - 10:00 AM','10:00 - 11:00 AM','11:00 - 12:00 PM','12:00 - 01:00 PM','01:00 - 02:00 PM','02:00 - 03:00 PM','03:00 - 04:00 PM','04:00 - 05:00 PM','05:00 - 06:00 PM','06:00 - 07:00 PM','07:00 - 08:00 PM','08:00 - 09:00 PM','09:00 - 10:00 PM'];
+
+function getChoreData(){var d=JSON.parse(localStorage.getItem(CHORE_KEY+'_'+CU.email)||'null');return(d&&d.today)?d:{today:'',rows:[],history:{}}}
+function saveChoreData(d){localStorage.setItem(CHORE_KEY+'_'+CU.email,JSON.stringify(d))}
+
+function checkMidnightReset(){var d=getChoreData(),ts=today();if(d.today!==ts){if(d.today&&d.rows.length>0){d.history[d.today]=d.rows.map(function(r){return{task:r.task,status:r.status}})}d.today=ts;d.rows=defaultTimeSlots.map(function(t,i){return{pk:i+1,time:t,task:'',status:'blank'}});saveChoreData(d)}return d}
+
+function renderChoreDashboard(){var d=checkMidnightReset();var total=d.rows.length,completed=d.rows.filter(function(r){return r.status==='completed'}).length,pending=d.rows.filter(function(r){return r.status==='pending'}).length,skip=d.rows.filter(function(r){return r.status==='skip'}).length;
+document.getElementById('cTotal').textContent=total;document.getElementById('cDone').textContent=completed;document.getElementById('cPend').textContent=pending;document.getElementById('cSkip').textContent=skip;
+var h='';d.rows.forEach(function(row){
+h+='<tr><td class="text-gray-500 text-sm font-mono">'+row.pk+'</td>';
+h+='<td><input type="text" value="'+esc(row.time)+'" placeholder="Time slot" onchange="updateChoreTime('+row.pk+',this.value)" class="bg-[#1e1e1e] border border-gray-700 text-gray-300 text-sm rounded px-2 py-1.5 w-full focus:outline-none focus:border-blue-500 transition"></td>';
+h+='<td><input type="text" value="'+esc(row.task)+'" placeholder="Enter task..." onchange="updateChoreTask('+row.pk+',this.value)"></td>';
+h+='<td><select onchange="updateChoreStatus('+row.pk+',this.value)"><option value="blank"'+(row.status==='blank'?' selected':'')+'>&#9675; Blank</option><option value="completed"'+(row.status==='completed'?' selected':'')+'>&#10003; Completed</option><option value="pending"'+(row.status==='pending'?' selected':'')+'>&#9203; Pending</option><option value="skip"'+(row.status==='skip'?' selected':'')+'>&#10007; Skip</option></select></td>';
+h+='<td>'+(choreEditMode?'<button onclick="deleteChoreRow('+row.pk+')" class="text-gray-500 hover:text-red-400 text-sm transition" title="Delete row"><i class="fa-solid fa-trash"></i></button>':'')+'</td></tr>';
+});document.getElementById('choreTableBody').innerHTML=h;
+renderHeatmap()}
+
+function updateChoreTask(pk,v){var d=getChoreData(),r=d.rows.find(function(x){return x.pk===pk});if(r){r.task=v;saveChoreData(d)}}
+function updateChoreTime(pk,v){var d=getChoreData(),r=d.rows.find(function(x){return x.pk===pk});if(r){r.time=v.trim()||r.time;saveChoreData(d)}}
+function updateChoreStatus(pk,v){var d=getChoreData(),r=d.rows.find(function(x){return x.pk===pk});if(r){r.status=v;saveChoreData(d);renderChoreDashboard()}}
+
+function toggleChoreEdit(){choreEditMode=!choreEditMode;var b=document.getElementById('editBtn');b.classList.toggle('active',choreEditMode);document.getElementById('addRowBtn').classList.toggle('hidden',!choreEditMode);renderChoreDashboard()}
+
+function addChoreRow(){var d=getChoreData(),np=d.rows.length+1,lt=d.rows.length>0?d.rows[d.rows.length-1].time:'09:00 - 10:00 AM';var m=lt.match(/(\d+):00 - (\d+):00 (AM|PM)/);if(!m)return;var newStart=parseInt(m[2]),pd=m[3];var newEnd=newStart>=12?1:newStart+1;if(newStart===11)pd=pd==='AM'?'PM':'AM';var z=function(n){return n<10?'0'+n:''+n};d.rows.push({pk:np,time:z(newStart)+':00 - '+z(newEnd)+':00 '+pd,task:'',status:'blank'});saveChoreData(d);renderChoreDashboard()}
+function deleteChoreRow(pk){var d=getChoreData();if(d.rows.length<=1)return;d.rows=d.rows.filter(function(r){return r.pk!==pk});d.rows.forEach(function(r,i){r.pk=i+1});saveChoreData(d);renderChoreDashboard()}
+
+function localDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function renderHeatmap(){var d=getChoreData(),hist=d.history||{},ts=today(),sd=new Date();sd.setDate(sd.getDate()-364);
+var startDay=sd.getDay();
+var totalCells=Math.ceil((365+startDay)/7)*7;
+var cells=[];for(var i=0;i<totalCells;i++){cells.push('')}
+for(var i=0;i<365;i++){var dt=new Date(sd);dt.setDate(dt.getDate()+i);cells[i+startDay]=localDateStr(dt)}
+var h='<div class="heatmap-grid">';
+for(var i=0;i<totalCells;i++){var ds=cells[i];var c='#161b22';var title=ds||'';
+if(!ds){h+='<div class="heatmap-cell" style="background:transparent"></div>';continue}
+if(ds===ts&&d.rows.length>0){var comp=d.rows.filter(function(r){return r.status==='completed'}).length;c=heatColor(comp)}
+else if(hist[ds]){var isActive=hist[ds].length>0;var comp=0;if(Array.isArray(hist[ds])){comp=hist[ds].filter(function(x){return x.status==='completed'}).length}
+if(isActive&&comp===0)c='#eab308';else c=heatColor(comp)}
+h+='<div class="heatmap-cell" style="background:'+c+'" title="'+esc(ds)+'"></div>'}
+h+='</div>';document.getElementById('heatmap').innerHTML=h}
+
+function heatColor(n){if(n>=7)return '#22c55e';if(n>=5)return '#4ade80';if(n>=1)return '#eab308';return '#161b22'}
+
+function showChoreView(){document.getElementById('tList').innerHTML='';document.getElementById('empty').classList.add('hidden');document.getElementById('choreDash').classList.remove('hidden');document.getElementById('normalInput').classList.add('hidden');document.getElementById('choreInput').classList.remove('hidden');document.getElementById('editBtn').classList.remove('hidden');renderChoreDashboard()}
+function hideChoreView(){document.getElementById('choreDash').classList.add('hidden');document.getElementById('normalInput').classList.remove('hidden');document.getElementById('choreInput').classList.add('hidden');document.getElementById('editBtn').classList.add('hidden');choreEditMode=false;var b=document.getElementById('editBtn');if(b)b.classList.remove('active');document.getElementById('addRowBtn').classList.add('hidden')}
+
+
+</script>
+</body></html>
