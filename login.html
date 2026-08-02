@@ -56,9 +56,8 @@ if(!nm||!em||pw.length<4){alert('Fill all fields!');return}
 var eml=em.toLowerCase();if(U.find(function(x){return (x.email||'').toLowerCase()===eml})){alert('Email already exists!');return}
 U.push({name:nm,email:em,pw:pw});
 localStorage.setItem('wu',JSON.stringify(U));
-alert('Account created! Now login.');
-goSignup();
-document.getElementById('le').value=em;
+localStorage.setItem('wcu',JSON.stringify({name:nm,email:em}));
+window.location.href='index.html';
 }
 function togglePw(id,el){
 var inp=document.getElementById(id);if(!inp)return;
