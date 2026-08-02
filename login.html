@@ -9,7 +9,7 @@
 <style>body{background:#1a1a1a;color:#fff;font-family:system-ui}.gc{background:rgba(33,33,33,.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.08)}.gg{box-shadow:0 0 40px rgba(34,197,94,.15)}.bg{background:linear-gradient(135deg,#22c55e,#16a34a)}.bg:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(34,197,94,.3)}@keyframes su{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}.su{animation:su .6s ease}</style>
 </head>
 <body class='min-h-screen flex items-center justify-center'>
-<div class='gc gg rounded-2xl p-8 w-full max-w-md mx-4 su'>
+<div class='gc gg rounded-2xl p-6 sm:p-8 w-full max-w-md mx-4 su'>
 <div class='text-center mb-8'>
 <div class='inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-green-700 mb-4'><i class='fa-solid fa-check-double text-white text-2xl'></i></div>
 <h1 class='text-3xl font-bold'>Simplly DO</h1>
@@ -17,7 +17,10 @@
 </div>
 <form onsubmit='doLogin(event)'>
 <input type='email' id='le' placeholder='Email' required class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 mb-4'>
-<input type='password' id='lp' placeholder='Password' required class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 mb-4'>
+<div class='relative mb-4'>
+<input type='password' id='lp' placeholder='Password' required class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 pr-10'>
+<i class='fa-solid fa-eye absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer hover:text-green-400 transition' role='button' tabindex='0' aria-label='Show password' title='Show password' onclick='togglePw("lp",this)' onkeydown='if(event.key==="Enter"||event.key===" "){event.preventDefault();togglePw("lp",this)}'></i>
+</div>
 <div id='err' class='hidden text-red-400 text-sm mb-4 text-center'></div>
 <button type='submit' class='bg w-full text-white font-bold py-3 rounded uppercase'>Login</button>
 </form>
@@ -25,7 +28,10 @@
 <div id='signupF' class='hidden mt-6 pt-6 border-t border-gray-700'>
 <input type='text' id='sn' placeholder='Name' class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 mb-3'>
 <input type='email' id='se' placeholder='Email' required class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 mb-3'>
-<input type='password' id='sp' placeholder='Password (min 4)' required class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 mb-3'>
+<div class='relative mb-3'>
+<input type='password' id='sp' placeholder='Password (min 4)' required class='w-full bg-gray-800 border border-gray-700 text-white rounded px-4 py-3 pr-10'>
+<i class='fa-solid fa-eye absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer hover:text-green-400 transition' role='button' tabindex='0' aria-label='Show password' title='Show password' onclick='togglePw("sp",this)' onkeydown='if(event.key==="Enter"||event.key===" "){event.preventDefault();togglePw("sp",this)}'></i>
+</div>
 <button onclick='doSignup()' class='bg w-full text-white font-bold py-3 rounded uppercase'>Signup</button>
 </div>
 </div>
@@ -53,6 +59,11 @@ localStorage.setItem('wu',JSON.stringify(U));
 alert('Account created! Now login.');
 goSignup();
 document.getElementById('le').value=em;
+}
+function togglePw(id,el){
+var inp=document.getElementById(id);if(!inp)return;
+if(inp.type==='password'){inp.type='text';el.classList.remove('fa-eye');el.classList.add('fa-eye-slash')}
+else{inp.type='password';el.classList.remove('fa-eye-slash');el.classList.add('fa-eye')}
 }
 if(localStorage.getItem('wcu'))window.location.href='index.html';
 </script>
