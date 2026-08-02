@@ -41,19 +41,19 @@ function goSignup(){document.getElementById('signupF').classList.toggle('hidden'
 function doLogin(e){
 e.preventDefault();
 e.stopPropagation();
-var em=document.getElementById('le').value.trim();
-var pw=document.getElementById('lp').value;
+var em=document.getElementById('le').value.trim().toLowerCase();
+var pw=document.getElementById('lp').value.trim();
 if(!em||!pw){document.getElementById('err').textContent='Enter both Email and Password!';document.getElementById('err').classList.remove('hidden');return}
-var u=U.find(function(x){return x.email===em&&x.pw===pw});
-if(!u){document.getElementById('err').textContent='Invalid credentials!';document.getElementById('err').classList.remove('hidden');return}
+var u=U.find(function(x){return (x.email||'').toLowerCase()===em&&x.pw===pw});
+if(!u){var accExists=U.some(function(x){return (x.email||'').toLowerCase()===em});document.getElementById('err').textContent=accExists?'Wrong password! Please try again.':'No account found with this email. Please sign up first!';document.getElementById('err').classList.remove('hidden');return}
 document.getElementById('err').classList.add('hidden');
 localStorage.setItem('wcu',JSON.stringify({name:u.name,email:u.email}));
 window.location.href='index.html';
 }
 function doSignup(){
-var nm=document.getElementById('sn').value,em=document.getElementById('se').value,pw=document.getElementById('sp').value;
+var nm=document.getElementById('sn').value.trim(),em=document.getElementById('se').value.trim(),pw=document.getElementById('sp').value.trim();
 if(!nm||!em||pw.length<4){alert('Fill all fields!');return}
-if(U.find(function(x){return x.email===em})){alert('Email already exists!');return}
+var eml=em.toLowerCase();if(U.find(function(x){return (x.email||'').toLowerCase()===eml})){alert('Email already exists!');return}
 U.push({name:nm,email:em,pw:pw});
 localStorage.setItem('wu',JSON.stringify(U));
 alert('Account created! Now login.');
